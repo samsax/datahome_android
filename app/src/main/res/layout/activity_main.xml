@@ -20,7 +20,8 @@
             android:layout_marginStart="21dp"
             android:layout_marginTop="16dp"
             android:gravity="center_horizontal"
-            android:text="Movie finder" />
+            android:text="Movie finder"
+            android:id="@+id/text"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
