@@ -5,6 +5,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -28,9 +30,12 @@ import mx.datahome.moviefinder.pojo.SearchResponse;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ListView listView;
-    private EditText editText;
 
+    private EditText editText;
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager layoutManager;
+    private int page;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,52 +44,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         fab.setOnClickListener(this);
         editText = findViewById(R.id.text);
         final Button button = findViewById(R.id.button);
-        listView = findViewById(R.id.list);
+        recyclerView = findViewById(R.id.my_recycler_view);
+        recyclerView.setHasFixedSize(true);
+
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
 
         button.setOnClickListener(this);
 
     }
 
     private void showResponse(SearchResponse searchResponse) {
-        List arrayNames = getArrayNames(searchResponse);
-        if(arrayNames.size()>0) {
-            listView.setAdapter(new ArrayAdapter(this,
-                    android.R.layout.simple_list_item_1,arrayNames ));
+        if(searchResponse.getSearch()!=null) {
+            mAdapter = new MyAdapter(searchResponse);
+            recyclerView.setAdapter(mAdapter);
         }else{
             editText.setError("Sin resultados");
         }
     }
 
-    public List getArrayNames(SearchResponse searchResponse){
-        List<Search> search = searchResponse.getSearch();
-        List names = new ArrayList();
-        if(search != null){
-            for (Search movie:search
-            ) {
-                names.add(movie.getTitle());
-            }
-        }
-        return names;
-    }
+
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.button){
-            Intent intent = new Intent(this,DetailActivity.class);
-            startActivity(intent);
+            page++;
+            searchMovies(editText.getText().toString(), page);
         }else if(v.getId()==R.id.fab){
-            searchMovies(editText.getText().toString());
+            page = 1;
+            searchMovies(editText.getText().toString(), page);
         }
     }
 
-    public void searchMovies(String textSearch){
+    public void searchMovies(String textSearch, int page){
         final Gson gson = new Gson();
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://www.omdbapi.com/?s="+textSearch+"&page=1&apikey=dd22ce1a";
+        String url ="http://www.omdbapi.com/?s="+textSearch+"&page="+page+"&apikey=dd22ce1a";
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-//                        textView.setText("La respuesta es: "+ response.substring(0,500));
                         SearchResponse searchResponse = gson.fromJson(response, SearchResponse.class);
                         showResponse(searchResponse);
                     }
